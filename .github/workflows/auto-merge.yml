@@ -12,7 +12,7 @@ jobs:
   auto-merge:
     name: Auto-merge formula bump PRs
     runs-on: ubuntu-latest
-    if: github.actor == 'dawidd6' || github.actor == 'BrewTestBot'
+    if: github.actor == 'nickygerritsen' || github.actor == 'dawidd6' || github.actor == 'BrewTestBot'
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -61,7 +61,7 @@ jobs:
             const isBump = /^.+\s+\d+\.\d+\.\d+$/.test(pr.title);
             core.setOutput('is_bump', isBump);
 
-      - name: Auto-approve and merge
+      - name: Auto-merge
         if: |
           steps.check_files.outputs.only_formula == 'true' &&
           steps.pr_info.outputs.is_bump == 'true' &&
@@ -69,8 +69,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Approve the PR
-          gh pr review ${{ github.event.pull_request.number }} --approve
-
-          # Merge the PR
-          gh pr merge ${{ github.event.pull_request.number }} --squash --auto
+          # Merge the PR directly (squash merge)
+          gh pr merge ${{ github.event.pull_request.number }} --squash --delete-branch

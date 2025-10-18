@@ -12,7 +12,7 @@ jobs:
   auto-merge:
     name: Auto-merge formula bump PRs
     runs-on: ubuntu-latest
-    if: github.actor == 'dawidd6' || github.actor == 'BrewTestBot'
+    if: github.actor == 'nickygerritsen' || github.actor == 'dawidd6' || github.actor == 'BrewTestBot'
     steps:
       - name: Check out code
         uses: actions/checkout@v4

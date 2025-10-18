@@ -1,0 +1,76 @@
+name: Auto-merge formula bumps
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Auto-merge formula bump PRs
+    runs-on: ubuntu-latest
+    if: github.actor == 'dawidd6' || github.actor == 'BrewTestBot'
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get changed files
+        id: changed_files
+        run: |
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+          echo "changed_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+
+          # Count number of changed files
+          NUM_FILES=$(echo "$CHANGED_FILES" | wc -l | tr -d ' ')
+          echo "num_files=$NUM_FILES" >> $GITHUB_OUTPUT
+
+      - name: Check if only formula files changed
+        id: check_files
+        run: |
+          CHANGED_FILES="${{ steps.changed_files.outputs.changed_files }}"
+          ONLY_FORMULA=true
+
+          # Check each file
+          while IFS= read -r file; do
+            if [[ ! "$file" =~ ^Formula/.+\.rb$ ]]; then
+              ONLY_FORMULA=false
+              break
+            fi
+          done <<< "$CHANGED_FILES"
+
+          echo "only_formula=$ONLY_FORMULA" >> $GITHUB_OUTPUT
+
+      - name: Get PR info
+        id: pr_info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });
+
+            // Check if PR title matches version bump pattern
+            const isBump = /^.+\s+\d+\.\d+\.\d+$/.test(pr.title);
+            core.setOutput('is_bump', isBump);
+
+      - name: Auto-approve and merge
+        if: |
+          steps.check_files.outputs.only_formula == 'true' &&
+          steps.pr_info.outputs.is_bump == 'true' &&
+          steps.changed_files.outputs.num_files == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Approve the PR
+          gh pr review ${{ github.event.pull_request.number }} --approve
+
+          # Merge the PR
+          gh pr merge ${{ github.event.pull_request.number }} --squash --auto

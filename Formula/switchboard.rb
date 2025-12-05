@@ -1,8 +1,8 @@
 class Switchboard < Formula
   desc "Smart URL router that opens links in different browsers"
   homepage "https://github.com/nickygerritsen/switchboard"
-  url "https://github.com/nickygerritsen/switchboard/archive/refs/tags/v1.1.0.tar.gz"
-  sha256 "9b1b0db0faba292faea3af4658fcad09aa33a3aab2d18cbb9a4323e8f05bc07d"
+  url "https://github.com/nickygerritsen/switchboard/archive/refs/tags/v1.1.1.tar.gz"
+  sha256 "914d28903ac182ed00bcaf64037a6aae41ea0397cf1f3a7f01935e47cf327df3"
   license "MIT"
 
   depends_on "go" => :build
